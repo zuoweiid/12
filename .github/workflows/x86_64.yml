@@ -109,7 +109,8 @@ jobs:
       id: package
       run: |
         cd openwrt
-        make download -j$(nproc)
+        # make download -j$(nproc)   # 先取消
+        make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
