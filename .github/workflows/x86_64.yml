@@ -5,18 +5,18 @@ on:
   workflow_dispatch:
     inputs:
       ssh:
-        description: 'SSH connection to Actions'
+        description: 'SSH远程 SSH connection to Actions'
         required: false
         default: 'false'
 
 env:
-  OPNAME: 'x86_64'
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  REPO_BRANCH: master
+  OPNAME: 'x86_64'                                   # 发布标签的名称
+  REPO_URL: https://github.com/coolsnowwolf/lede     # 源码链接
+  REPO_BRANCH: master                                # 源码分支
   FEEDS_CONF: feeds.conf.default
   EXTERNAL_FILE: configs/LuciApp.config
   CONFIG_FILE: configs/x86_64.config
-  SYS_CONF_SH: configure.sh
+  SYS_CONF_SH: configure.sh                          # configure.sh 脚本的变量
   PACKS: package.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
@@ -25,16 +25,18 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-20.04                            ## ←选择编译系统版本
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@main
+    - name: 准备环境                                 ## Checkout
+      uses: actions/checkout@main                    ## 开始运行脚本，之前都是准备工作 加载变量值
 
-    - name: Initialization environment
+    - name: 安装编译环境                             ## Initialization environment
       env:
-        DEBIAN_FRONTEND: noninteractive
+        DEBIAN_FRONTEND: noninteractive              ## 非交互模式
       run: |
+        pwd && ls
+        
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install $(curl -fsSL https://raw.githubusercontent.com/bigbugcc/openwrts/master/openwrt-env)
@@ -44,44 +46,44 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Free Disk Space (Ubuntu)
+    - name: 可用磁盘空间                              ## Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: true
-        android: true
+        tool-cache: true                               ## 工具缓存
+        android: true                                  ## 安卓
         dotnet: true
         haskell: true
         large-packages: true
         swap-storage: true
 
-    - name: Clone source code
+    - name: 下载Lede源码                               ## Clone source code
       working-directory: /workdir
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: Cache
+    - name: 缓存                                        ## Cache
       uses: klever1988/cachewrtbuild@main
       with:
           ccache: 'true'
           mixkey: 'x86'
           prefix: 'openwrt'
 
-    - name: Load custom feeds
+    - name: 加载DIY自定义（自定义脚本）                               ## Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $SYS_CONF_SH
         cd openwrt
         $GITHUB_WORKSPACE/$SYS_CONF_SH
 
-    - name: Update feeds
+    - name: 更新feeds                                    ## Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
-    - name: Install feeds
+    - name: 安装feeds                                    ## Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: Load custom configuration
+    - name: 加载DIY配置（插件脚本）                                  ## Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
@@ -89,21 +91,21 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$PACKS
 
-    - name: Modify configuration
+    - name: 修改配置（机型配置）                                      ## Modify configuration
       run: |
         cat $EXTERNAL_FILE >> openwrt/.config
         cd openwrt && make defconfig
         sed -i '/CONFIG_DEFAULT_luci/'d .config
         cat .config
 
-    - name: SSH connection to Actions
+    - name: SSH 连接                                      ## SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
       if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
       env:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: Download package
+    - name: 下载DL库                                      ## Download package
       id: package
       run: |
         cd openwrt
@@ -111,7 +113,7 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Compile the firmware
+    - name: 开始编译固件                                   ## Compile the firmware
       id: compile
       run: |
         cd openwrt
@@ -122,18 +124,18 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    - name: Check space usage
+    - name: 检查空间使用情况                               ## Check space usage
       if: (!cancelled())
       run: df -hT
 
-    - name: Upload bin directory
+    - name: 上传bin目录                                   ## Upload bin directory
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: openwrt/bin
 
-    - name: Organize files
+    - name: 整理文件                                     ## Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
@@ -142,14 +144,14 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Upload firmware directory
+    - name: 上传固件目录                                 ## Upload firmware directory
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
 
-    - name: Generate release tag
+    - name: 生成发布标签                                 ## Generate release tag
       id: tag
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
@@ -158,7 +160,7 @@ jobs:
         touch release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Upload firmware to release
+    - name: 上传固件发布                                  ## Upload firmware to release
       uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
