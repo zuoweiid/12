@@ -1,5 +1,5 @@
 #!/bin/bash
-lede_path=$(cd `dirname $0`; pwd)     ##目录变量=Lede源码目录；
+lede_path=$(pwd)                            ##目录变量=Lede源码目录；
 cd $lede_path
 
 # 字体颜色配置
