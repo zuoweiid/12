@@ -17,7 +17,7 @@ env:
   EXTERNAL_FILE: configs/LuciApp.config              # 通用插件App
   CONFIG_FILE: configs/x86_64.config                 # 机型配置
   SYS_CONF_SH: diy-part1.sh                          # 自定义配置 configure.sh
-  PACKS: package.sh                                  # 下载第三方插件 package.sh
+  PACKS: diy-part2.sh                                # 下载第三方插件 package.sh
   UPLOAD_BIN_DIR: false                              # 是否上传Bin目录
   UPLOAD_FIRMWARE: true                              # 是否上传固件
   UPLOAD_RELEASE: true                               # 是否发布固件
@@ -72,10 +72,10 @@ jobs:
 
     - name: 加载DIY自定义（configure.sh脚本）                               ## Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $SYS_CONF_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$SYS_CONF_SH
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default     ## 如果变量脚本存在，则移动脚本至 openwrt/目录内
+        chmod +x $SYS_CONF_SH                                               ## 增加脚本执行权限
+        cd openwrt                                                          ## 进入 openwrt目录内
+        $GITHUB_WORKSPACE/$SYS_CONF_SH                                      ## 执行 diy-part1.sh 脚本
 
     # - name: 更新feeds                                    ## Update feeds
       # run: cd openwrt && ./scripts/feeds update -a
@@ -85,17 +85,17 @@ jobs:
 
     - name: 加载DIY配置（package.sh脚本）                                  ## Load custom configuration
       run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $PACKS
-        cd openwrt
-        $GITHUB_WORKSPACE/$PACKS
+        # [ -e files ] && mv files openwrt/files                             ## 如果变量目录存在，则移动
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 如果变量机型配置存在，则移动机型配置至 openwrt/目录内
+        chmod +x $PACKS                                                    ## 增加脚本执行权限
+        cd openwrt                                                         ## 进入 openwrt目录内
+        $GITHUB_WORKSPACE/$PACKS                                           ## 执行 diy-part2.sh 脚本
 
     # - name: 修改配置（.config配置）                                      ## Modify configuration
       # run: |
         # cat $EXTERNAL_FILE >> openwrt/.config
         # cd openwrt && make defconfig
-        # sed -i '/CONFIG_DEFAULT_luci/'d .config
+        # sed -i '/CONFIG_DEFAULT_luci/'d .config                          ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
         # cat .config
 
     - name: 使用本地.config配置
