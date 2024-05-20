@@ -16,7 +16,7 @@ env:
   FEEDS_CONF: feeds.conf.default                     # feeds 插件源
   EXTERNAL_FILE: configs/LuciApp.config              # 通用插件App
   CONFIG_FILE: configs/x86_64.config                 # 机型配置
-  SYS_CONF_SH: configure.sh                          # 自定义配置 configure.sh
+  SYS_CONF_SH: diy-part1.sh                          # 自定义配置 configure.sh
   PACKS: package.sh                                  # 下载第三方插件 package.sh
   UPLOAD_BIN_DIR: false                              # 是否上传Bin目录
   UPLOAD_FIRMWARE: true                              # 是否上传固件
@@ -77,11 +77,11 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$SYS_CONF_SH
 
-    - name: 更新feeds                                    ## Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+    # - name: 更新feeds                                    ## Update feeds
+      # run: cd openwrt && ./scripts/feeds update -a
 
-    - name: 安装feeds                                    ## Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+    # - name: 安装feeds                                    ## Install feeds
+      # run: cd openwrt && ./scripts/feeds install -a
 
     - name: 加载DIY配置（package.sh脚本）                                  ## Load custom configuration
       run: |
@@ -91,16 +91,17 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$PACKS
 
-    - name: 修改配置（.config配置）                                      ## Modify configuration
-      run: |
-        cat $EXTERNAL_FILE >> openwrt/.config
-        cd openwrt && make defconfig
-        sed -i '/CONFIG_DEFAULT_luci/'d .config
-        cat .config
-
-    # - name: 使用本地.config配置
+    # - name: 修改配置（.config配置）                                      ## Modify configuration
       # run: |
-        # cp -fv configs/.config openwrt/.config
+        # cat $EXTERNAL_FILE >> openwrt/.config
+        # cd openwrt && make defconfig
+        # sed -i '/CONFIG_DEFAULT_luci/'d .config
+        # cat .config
+
+    - name: 使用本地.config配置
+      run: |
+        cp -fv configs/.config openwrt/.config
+        make defconfig
         
     - name: SSH 连接                                      ## SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
