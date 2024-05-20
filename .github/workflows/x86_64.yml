@@ -7,7 +7,7 @@ on:
       ssh:
         description: 'SSH远程 SSH connection to Actions'
         required: false
-        default: 'false'
+        default: 'true-false'
 
 env:
   OPNAME: 'x86_64'                                   # 发布标签的名称
