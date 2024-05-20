@@ -13,15 +13,15 @@ env:
   OPNAME: 'x86_64'                                   # 发布标签的名称
   REPO_URL: https://github.com/coolsnowwolf/lede     # 源码链接
   REPO_BRANCH: master                                # 源码分支
-  FEEDS_CONF: feeds.conf.default
-  EXTERNAL_FILE: configs/LuciApp.config
-  CONFIG_FILE: configs/x86_64.config
-  SYS_CONF_SH: configure.sh                          # configure.sh 脚本的变量
-  PACKS: package.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: true
-  UPLOAD_RELEASE: true
-  TZ: Asia/Shanghai
+  FEEDS_CONF: feeds.conf.default                     # feeds 插件源
+  EXTERNAL_FILE: configs/LuciApp.config              # 通用插件App
+  CONFIG_FILE: configs/x86_64.config                 # 机型配置
+  SYS_CONF_SH: configure.sh                          # 自定义配置 configure.sh
+  PACKS: package.sh                                  # 下载第三方插件 package.sh
+  UPLOAD_BIN_DIR: false                              # 是否上传Bin目录
+  UPLOAD_FIRMWARE: true                              # 是否上传固件
+  UPLOAD_RELEASE: true                               # 是否发布固件
+  TZ: Asia/Shanghai                                  # 时区
 
 jobs:
   build:
@@ -70,7 +70,7 @@ jobs:
           mixkey: 'x86'
           prefix: 'openwrt'
 
-    - name: 加载DIY自定义（自定义脚本）                               ## Load custom feeds
+    - name: 加载DIY自定义（configure.sh脚本）                               ## Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $SYS_CONF_SH
@@ -83,7 +83,7 @@ jobs:
     - name: 安装feeds                                    ## Install feeds
       run: cd openwrt && ./scripts/feeds install -a
 
-    - name: 加载DIY配置（插件脚本）                                  ## Load custom configuration
+    - name: 加载DIY配置（package.sh脚本）                                  ## Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
@@ -91,7 +91,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$PACKS
 
-    - name: 修改配置（机型配置）                                      ## Modify configuration
+    - name: 修改配置（.config配置）                                      ## Modify configuration
       run: |
         cat $EXTERNAL_FILE >> openwrt/.config
         cd openwrt && make defconfig

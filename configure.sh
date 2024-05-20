@@ -1,8 +1,11 @@
 #!/bin/bash
 # Modify default system settings
 
-# 修改默认IP为192.168.10.1
-sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate 
+# 修改默认IP为10.10.10.1
+sed -i 's/192.168.1.1/10.10.10.1/g' package/base-files/files/bin/config_generate 
+
+# 修改 root密码登录为空   （生效）
+sed -i 's@.*CYXluq4wUazHjmCDBCqXF*@#&@g' package/lean/default-settings/files/zzz-default-settings
 
 # Hello World
 echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
