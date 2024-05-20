@@ -17,6 +17,7 @@ print_yellow() {                          ## 打印黄色字体
 
 
 print_yellow "正在执行configure.sh脚本......"
+pwd && ls                                                                        # 显示当前步骤的路径和所有文件和文件夹；
 # 修改默认IP为192.168.10.1   （生效）
 sed -i 's/192.168.1.1/10.10.10.1/g' package/base-files/files/bin/config_generate 
 
