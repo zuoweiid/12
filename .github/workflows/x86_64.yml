@@ -101,6 +101,7 @@ jobs:
     - name: 使用本地.config配置
       run: |
         cp -fv configs/.config openwrt/.config
+        cd openwrt
         make defconfig
         
     - name: SSH 连接                                      ## SSH connection to Actions
