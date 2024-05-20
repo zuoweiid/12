@@ -98,6 +98,10 @@ jobs:
         sed -i '/CONFIG_DEFAULT_luci/'d .config
         cat .config
 
+    - name: 使用本地.config配置
+      run: |
+        cp -fv configs/.config openwrt/.config
+        
     - name: SSH 连接                                      ## SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
       if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
