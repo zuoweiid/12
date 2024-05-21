@@ -9,6 +9,11 @@ on:
         required: false
         default: 'true-false'
 
+
+
+
+
+
 env:
   OPNAME: 'x86_64'                                   # 发布标签的名称
   REPO_URL: https://github.com/coolsnowwolf/lede     # 源码链接
@@ -74,13 +79,7 @@ jobs:
         chmod +x $DIY_P1_SH                                               ## 增加脚本执行权限
         cd openwrt                                                        ## 进入 openwrt目录内
         $GITHUB_WORKSPACE/$DIY_P1_SH                                      ## 执行 diy-part1.sh 脚本
-
-    # - name: 更新feeds                                    ## Update feeds
-      # run: cd openwrt && ./scripts/feeds update -a
-
-    # - name: 安装feeds                                    ## Install feeds
-      # run: cd openwrt && ./scripts/feeds install -a
-
+        
     - name: 加载DIY配置（package.sh脚本）                                  ## Load custom configuration
       run: |
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 如果变量机型 x86_64.config 配置存在，则移动机型配置至 openwrt/目录内
@@ -88,18 +87,18 @@ jobs:
         cd openwrt                                                         ## 进入 openwrt目录内
         $GITHUB_WORKSPACE/$DIY_P2_SH                                       ## 执行 diy-part2.sh 脚本
 
-    # - name: 修改配置（.config配置）                                      ## Modify configuration
-      # run: |
-        # cat $EXTERNAL_FILE >> openwrt/.config
-        # cd openwrt && make defconfig
-        # sed -i '/CONFIG_DEFAULT_luci/'d .config                          ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
-        # cat .config
-
-    - name: 使用本地.config配置
+    - name: 修改配置（.config配置）                                      ## Modify configuration
       run: |
-        cp -fv DIY/.config openwrt/.config
-        cd openwrt
-        make defconfig
+        cat $EXTERNAL_FILE >> openwrt/.config                              ## 加载通用插件 LuciApp.config
+        cd openwrt && make defconfig
+        sed -i '/CONFIG_DEFAULT_luci/'d .config                          ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
+        cat .config
+
+    # - name: 使用本地.config配置
+      # run: |
+        # cp -fv DIY/.config openwrt/.config
+        # cd openwrt
+        # make defconfig
         
     - name: SSH 连接                                      ## SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -108,12 +107,12 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: 上传.config配置文件
-      uses: actions/upload-artifact@v2
-      if: steps.outputs.status == 'success' 
-      with:
-        name: .config
-        path: openwrt/.config
+    # - name: 上传.config配置文件                ## 不能使用
+      # uses: actions/upload-artifact@v2
+      # if: steps.outputs.status == 'success' 
+      # with:
+        # name: .config
+        # path: openwrt/.config
         
     - name: 下载DL库                                      ## Download package
       id: package
