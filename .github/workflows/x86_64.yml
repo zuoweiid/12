@@ -9,9 +9,7 @@ on:
         required: false
         default: 'true-false'
 
-
-
-
+# 增加配置文件选择
 
 
 env:
@@ -82,18 +80,35 @@ jobs:
         
     - name: 加载DIY配置（package.sh脚本）                                  ## Load custom configuration
       run: |
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 如果变量机型 x86_64.config 配置存在，则移动机型配置至 openwrt/目录内
         chmod +x $DIY_P2_SH                                                ## 增加脚本执行权限
         cd openwrt                                                         ## 进入 openwrt目录内
         $GITHUB_WORKSPACE/$DIY_P2_SH                                       ## 执行 diy-part2.sh 脚本
-
-    - name: 修改配置（.config配置）                                      ## Modify configuration
+        
+    - name: 使用本地.config配置
       run: |
+        cd openwrt
+        
+        if [ ! -f "$GITHUB_WORKSPACE/DIY/.config" ]; then                  ## 如果 DIY/.config 不存在，就加载 x86_64.config 和 LuciApp.config 文件；
+            mv $CONFIG_FILE openwrt/.config
+            cat $EXTERNAL_FILE >> openwrt/.config
+            cd openwrt && make defconfig
+            sed -i '/CONFIG_DEFAULT_luci/'d .config
+            cat .config
+        else
+            	cd $GITHUB_WORKSPACE
+                mv -fv DIY/.config openwrt/.config
+                cd openwrt
+                make defconfig
+        fi
+
+    - name: 修改机型配置（.config配置）                                      ## Modify configuration
+      run: |
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 加载机型文件 x86_64.config 配置，如果存在 则移动机型配置至 openwrt/目录内
         cat $EXTERNAL_FILE >> openwrt/.config                              ## 加载通用插件 LuciApp.config
         cd openwrt && make defconfig
-        sed -i '/CONFIG_DEFAULT_luci/'d .config                          ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
+        sed -i '/CONFIG_DEFAULT_luci/'d .config                            ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
         cat .config
-
+        
     # - name: 使用本地.config配置
       # run: |
         # cp -fv DIY/.config openwrt/.config
