@@ -110,7 +110,7 @@ jobs:
 
     - name: 上传.config配置文件
       uses: actions/upload-artifact@v2
-      # if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      if: steps.outputs.status == 'success' 
       with:
         name: .config
         path: openwrt/.config
