@@ -94,7 +94,7 @@ jobs:
         cd openwrt                                                         ## 进入 openwrt目录内
         $GITHUB_WORKSPACE/$DIY_P2_SH                                       ## 执行 diy-part2.sh 脚本
         
-    - name: 使用本地.config配置
+    - name: 优先使用本地.config配置
       run: |
         cd openwrt
         
@@ -111,13 +111,13 @@ jobs:
                 make defconfig
         fi
 
-    - name: 修改机型配置（.config配置）                                      ## Modify configuration
-      run: |
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 加载机型文件 x86_64.config 配置，如果存在 则移动机型配置至 openwrt/目录内
-        cat $EXTERNAL_FILE >> openwrt/.config                              ## 加载通用插件 LuciApp.config
-        cd openwrt && make defconfig
-        sed -i '/CONFIG_DEFAULT_luci/'d .config                            ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
-        cat .config
+    # - name: 修改机型配置（.config配置）                                      ## Modify configuration
+      # run: |
+        # [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config             ## 加载机型文件 x86_64.config 配置，如果存在 则移动机型配置至 openwrt/目录内
+        # cat $EXTERNAL_FILE >> openwrt/.config                              ## 加载通用插件 LuciApp.config
+        # cd openwrt && make defconfig
+        # sed -i '/CONFIG_DEFAULT_luci/'d .config                            ## 在.config文件中删除包含CONFIG_DEFAULT_luci的行
+        # cat .config
         
     # - name: 使用本地.config配置
       # run: |
